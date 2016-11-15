@@ -69,37 +69,72 @@ app.get('/api/courses', function(req, res) {
             if (err) {
                 console.log(err);
             }
-            console.log(rows);
-            // console.log(rows[0][0].metadata);
-            //console.log(request);
+            else {
+                var result = [];
+                var course = {
+                    id: null,
+                    subject: "",
+                    number: null,
+                    title: "",
+                    attribute: "",
+                    created_at: ""
+                };
+                console.log(rows);
+                rows.forEach(function (row) {
+                    if (row.value === null) {  
+                        console.log('NULL');  
+                    } else {  
+                        course.id = row.id.value;
+                        course.subject = row.subject.value;
+                        course.number = row.number.value;
+                        course.title = row.title.value;
+                        course.attribute = row.attribute.value;
+                        course.created_at = row.created_at.value;
+                        
+                        result.push(course);  
+                    }  
+                });
+                result = result.reverse();
+                res.json(result);
+                
+                //console.log(request);
+            }
         });
-        var result = "";  
-        request.on('row', function(columns) {  
-            console.log(columns);
-            // columns.forEach(function(column) {  
-            //   if (column.value === null) {  
-            //     console.log('NULL');  
-            //   } else {  
-            //     //console.log(column);
-            //     //course.id
-            //     result+= column.value + " ";  
-            //   }  
-            // });  
-            //console.log(result);  
-            res.send(columns);
-            result ="";  
-        });  
+        // var result = "";  
+        // request.on('row', function(columns) {  
+        //     //console.log(columns);
+            
+        //     // columns.forEach(function(column) {  
+        //     //   if (column.value === null) {  
+        //     //     console.log('NULL');  
+        //     //   } else {  
+        //     //     //console.log(column);
+        //     //     //course.id
+        //     //     result+= column.value + " ";  
+        //     //   }  
+        //     // });  
+            
+        //     //console.log(result);  
+        //     res.send(columns);
+        //     result ="";  
+        // });  
   
-        request.on('done', function(rowCount, more) {  
-            console.log(rowCount + ' rows returned');  
-        });  
+        // request.on('done', function(rowCount, more) {  
+        //     console.log(rowCount + ' rows returned');  
+        // });  
         connection.execSql(request);  
         
     });
 
 //announcement retrieval
-app.get("/api/announcements", function(req, res) {
-        
+app.get("/api/announcements/course", function(req, res) {
+        var request = new dbRequest("select top 2 * from comp3504data.courses", function(err, rowCount, rows) {
+            if (err) {
+                console.log(err);
+            } else {
+                
+            }
+        });
     });
     
 //instructor retrieval
