@@ -51,47 +51,30 @@ connection.on('connect', function(err) {
 });  
 
 //Begin routes
-//
+//course dump
+//TO DO: decide what to sort on; probably on subject then #
 app.get('/api/courses', function(req, res) {
         console.log("in courses");
-
-        // var course = {
-        //     id: null,
-        //     subject: "",
-        //     number: null,
-        //     title: "",
-        //     attribute: "",
-        //     created_at: ""
-        // };
         
-        
-        var request = new dbRequest("select top 2 * from comp3504data.courses", function(err, rowCount, rows) {
+        var request = new dbRequest("select * from comp3504data.courses", function(err, rowCount, rows) {
             if (err) {
                 console.log(err);
             }
             else {
                 var result = [];
-                var course = {
-                    id: null,
-                    subject: "",
-                    number: null,
-                    title: "",
-                    attribute: "",
-                    created_at: ""
-                };
-                console.log(rows);
+                //console.log(rows);
                 rows.forEach(function (row) {
                     if (row.value === null) {  
                         console.log('NULL');  
                     } else {  
-                        course.id = row.id.value;
-                        course.subject = row.subject.value;
-                        course.number = row.number.value;
-                        course.title = row.title.value;
-                        course.attribute = row.attribute.value;
-                        course.created_at = row.created_at.value;
-                        
-                        result.push(course);  
+                        result.push(new Course(
+                            row.id.value,
+                            row.subject.value,
+                            row.number.value,
+                            row.title.value,
+                            row.attribute.value,
+                            row.created_at.value
+                        ));  
                     }  
                 });
                 result = result.reverse();
@@ -100,46 +83,66 @@ app.get('/api/courses', function(req, res) {
                 //console.log(request);
             }
         });
-        // var result = "";  
-        // request.on('row', function(columns) {  
-        //     //console.log(columns);
-            
-        //     // columns.forEach(function(column) {  
-        //     //   if (column.value === null) {  
-        //     //     console.log('NULL');  
-        //     //   } else {  
-        //     //     //console.log(column);
-        //     //     //course.id
-        //     //     result+= column.value + " ";  
-        //     //   }  
-        //     // });  
-            
-        //     //console.log(result);  
-        //     res.send(columns);
-        //     result ="";  
-        // });  
-  
-        // request.on('done', function(rowCount, more) {  
-        //     console.log(rowCount + ' rows returned');  
-        // });  
         connection.execSql(request);  
         
     });
 
 //announcement retrieval
+//TO DO: sort announcements by most recent date
 app.get("/api/announcements/course", function(req, res) {
-        var request = new dbRequest("select top 2 * from comp3504data.courses", function(err, rowCount, rows) {
+        console.log("in course announcements");
+        var request = new dbRequest("select * from comp3504data.announcements", function(err, rowCount, rows) {
             if (err) {
                 console.log(err);
             } else {
-                
+                var result = [];
+                //console.log(rows);
+                rows.forEach(function (row) {
+                    if (row.value === null) {  
+                        console.log('NULL');  
+                    } else {  
+                        result.push(new Announcement(
+                            row.announcementID.value,
+                            row.postedBy.value,
+                            row.postedOn.value,
+                            row.postedTo.value,
+                            row.title.value,
+                            row.content.value
+                        ));  
+                    }  
+                });
+
+                //console.log(result);
+                result = result.reverse();
+                res.json(result);
             }
         });
+        connection.execSql(request);
     });
     
 //instructor retrieval
+//TO DO: add prof bios then retrieve data
 app.get("/api/instructors", function(req, res) {
         
     });
 
 app.listen(process.env.PORT, process.env.IP);
+
+//utility code
+function Announcement(id, by, on, to, title, content) {
+    this.announcementID = id;
+    this.postedBy = by;
+    this.postedOn = on;
+    this.postedTo = to;
+    this.title = title;
+    this.content = content;
+}
+
+function Course(id, subject, number, title, attribute, created_at) {
+    this.id = id;
+    this.subject = subject;
+    this.number = number;
+    this.title = title;
+    this.attribute = attribute;
+    this.created_at = created_at;
+}
