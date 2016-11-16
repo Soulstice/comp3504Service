@@ -123,7 +123,32 @@ app.get("/api/announcements/course", function(req, res) {
 //instructor retrieval
 //TO DO: add prof bios then retrieve data
 app.get("/api/instructors", function(req, res) {
-        
+        var request = new dbRequest("select * from comp3504data.instructors", function(err, rowCount, rows) {
+            if (err) {
+                console.log(err);
+            } else {
+                var result = [];
+                //console.log(rows);
+                rows.forEach(function (row) {
+                    if (row.value === null) {  
+                        console.log('NULL');  
+                    } else {  
+                        result.push(new Instructor(
+                            row.id.value,
+                            row.full_name.value,
+                            row.created_at.value,
+                            row.imagePath.value,
+                            row.bio.value
+                        ));  
+                    }  
+                });
+
+                //console.log(result);
+                result = result.reverse();
+                res.json(result);
+            }
+        });
+        connection.execSql(request);
     });
 
 app.listen(process.env.PORT, process.env.IP);
@@ -145,4 +170,12 @@ function Course(id, subject, number, title, attribute, created_at) {
     this.title = title;
     this.attribute = attribute;
     this.created_at = created_at;
+}
+
+function Instructor (id, fullName, created, imgPath, bio) {
+    this.id = id;
+    this.fullName = fullName;
+    this.createdAt = created;
+    this.imgPath = imgPath;
+    this.bio = bio;
 }
