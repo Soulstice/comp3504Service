@@ -12,6 +12,7 @@
     "async": "~0.2.8",
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
+    "http": "0.0.0",
     "socket.io": "~0.9.14",
     "tedious": "^1.14.0"
   },

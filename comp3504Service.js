@@ -1,7 +1,8 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var http = require("http");
 
-//var db = require('mssql');
+
 var dbConnection = require("tedious").Connection;
 var dbRequest = require("tedious").Request;
 var dbTypes = require("tedious").Type;
@@ -13,11 +14,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 //app.set('',config.secret);
 
+var server = http.createServer(app);
 
-// db.on('error', console.error.bind(console, 'connection error:'));
-// db.once('open', function callback () {
-//     console.log("connected");
-// });
 
 app.use(function(req, res, next) { 
     res.header("Access-Control-Allow-Origin", "*"); 
@@ -151,7 +149,10 @@ app.get("/api/instructors", function(req, res) {
         connection.execSql(request);
     });
 
-app.listen(process.env.PORT, process.env.IP);
+//cloud 9 listen
+//app.listen(process.env.PORT, process.env.IP);
+//azure listen
+server.listen(process.env.PORT);
 
 //utility code
 function Announcement(id, by, on, to, title, content) {
