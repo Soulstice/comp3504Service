@@ -49,6 +49,11 @@ connection.on('connect', function(err) {
 });  
 
 //Begin routes
+
+app.get('/', function (req, res) {
+  res.send('hello world');
+});
+
 //course dump
 //TO DO: decide what to sort on; probably on subject then #
 app.get('/api/courses', function(req, res) {
