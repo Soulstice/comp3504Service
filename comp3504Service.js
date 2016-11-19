@@ -38,7 +38,7 @@ var config = {
     }
 };
 
-var connection = new dbConnection(config);  
+var connection = new dbConnection(config);
 connection.on('connect', function(err) {  
 // If no error, then good to proceed.  
     if (err) {
@@ -51,7 +51,10 @@ connection.on('connect', function(err) {
 //Begin routes
 
 app.get('/', function (req, res) {
-  res.send('hello world');
+  //res.send('hello world');
+  res.json({
+      message: "jsoooooooooooooon"
+  });
 });
 
 //course dump
