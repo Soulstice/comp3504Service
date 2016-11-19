@@ -52,9 +52,10 @@ connection.on('connect', function(err) {
 
 app.get('/', function (req, res) {
   //res.send('hello world');
-  res.json({
-      message: "jsoooooooooooooon"
-  });
+//   res.json({
+//       message: "jsoooooooooooooon"
+//   });
+  res.json(app);
 });
 
 //course dump
@@ -100,6 +101,7 @@ app.get("/api/announcements/course", function(req, res) {
         var request = new dbRequest("select * from comp3504data.announcements", function(err, rowCount, rows) {
             if (err) {
                 console.log(err);
+                res.json(err);
             } else {
                 var result = [];
                 //console.log(rows);
@@ -132,6 +134,7 @@ app.get("/api/instructors", function(req, res) {
         var request = new dbRequest("select * from comp3504data.instructors", function(err, rowCount, rows) {
             if (err) {
                 console.log(err);
+                res.json(err);
             } else {
                 var result = [];
                 //console.log(rows);
