@@ -52,10 +52,10 @@ connection.on('connect', function(err) {
 
 app.get('/', function (req, res) {
   //res.send('hello world');
-//   res.json({
-//       message: "jsoooooooooooooon"
-//   });
-  res.json(app);
+  res.json({
+      message: "jsoooooooooooooon"
+  });
+  
 });
 
 //course dump
@@ -94,14 +94,49 @@ app.get('/api/courses', function(req, res) {
         
     });
 
+function getCourseInstances (courseID) {
+    var courseInstances = [];
+    var sql = "select sec.abbrev," +
+            	"d.day," +
+            	"d.start_time," +
+            	"d.end_time," +
+            	"l.room as location" +	
+                "from comp3504data.deliveries d" +
+                "inner join comp3504data.locations l on d.location_id = l.id" +
+                "inner join comp3504data.sections sec on sec.id = d.section_id" +
+                "inner join comp3504data.courses c on c.id = sec.course_id" +
+                "where c.id = " + courseID;
+    var request = new dbRequest(sql, function (err, rowCount, rows) {
+        if (err) {
+            console.log(err);
+        } else {
+            
+            rows.forEach(function (row) {
+                if (row.value === null) {
+                    console.log('NULL');
+                } else {
+                    courseInstances.push( new CourseInstance(
+                        row.abbrev.value,
+                        row.day.value,
+                        row.start_time.value,
+                        row.end_time.value,
+                        row.location.value
+                    ));
+                }
+            });
+        }
+    });
+    return courseInstances;
+}
+
 //announcement retrieval
 //TO DO: sort announcements by most recent date
 app.get("/api/announcements/course", function(req, res) {
         console.log("in course announcements");
-        var request = new dbRequest("select * from comp3504data.announcements", function(err, rowCount, rows) {
+        var request = new dbRequest("SELECT * FROM comp3504data.announcements", function(err, rowCount, rows) {
             if (err) {
                 console.log(err);
-                res.json(err);
+                res.json({message: "error retrieving course announcements"});
             } else {
                 var result = [];
                 //console.log(rows);
@@ -127,11 +162,98 @@ app.get("/api/announcements/course", function(req, res) {
         });
         connection.execSql(request);
     });
+
+//return the groups of announcements
+app.get("/api/announcements/", function(req, res) {
+    console.log("in announcements");
+   
+    var repository = [];
+   
+    //build requests 
+    var courseAnnounceRequest = new dbRequest("SELECT * FROM comp3504data.announcements WHERE announcementGroupID = 1", function(err, rowCount, rows) {
+        if (err) {
+            console.log(err);
+            res.json({message: "error while receiving course announcements"});
+        } else {
+            var courseResults = new AnnouncementGroup(1, "Course");
+            rows.forEach(function (row) {
+                if (row.value === null) {  
+                    console.log('NULL');  
+                } else {  
+                    courseResults.announcements.push(new Announcement(
+                        row.announcementID.value,
+                        row.postedBy.value,
+                        row.postedOn.value,
+                        row.postedTo.value,
+                        row.title.value,
+                        row.content.value
+                    ));  
+                } 
+            });
+            console.log("finished with course announcements");
+            repository.push(courseResults);
+            connection.execSql(instructAnnounceRequest);
+        }
+    });
+    
+    var instructAnnounceRequest = new dbRequest("SELECT * FROM comp3504data.announcements WHERE announcementGroupID = 2", function(err, rowCount, rows) {
+        if (err) {
+            console.log(err);
+            res.json({message: "error while receiving instructor announcements"});
+        } else {
+            var instructResults = new AnnouncementGroup(2, "Instructor");
+            rows.forEach(function (row) {
+                if (row.value === null) {  
+                    console.log('NULL');  
+                } else {  
+                    instructResults.announcements.push(new Announcement(
+                        row.announcementID.value,
+                        row.postedBy.value,
+                        row.postedOn.value,
+                        row.postedTo.value,
+                        row.title.value,
+                        row.content.value
+                    ));  
+                } 
+            });
+            console.log("finished with instructor announcements");
+            repository.push(instructResults);
+            connection.execSql(societyAnnounceRequest);
+        }
+    });
+    
+    var societyAnnounceRequest = new dbRequest("SELECT * FROM comp3504data.announcements WHERE announcementGroupID = 3", function(err, rowCount, rows) {
+        if (err) {
+            console.log(err);
+            res.json({message: "error while receiving student society announcements"});
+        } else {
+            var societyResults = new AnnouncementGroup(3, "Student Society");
+            rows.forEach(function (row) {
+                if (row.value === null) {  
+                    console.log('NULL');  
+                } else {  
+                    societyResults.announcements.push(new Announcement(
+                        row.announcementID.value,
+                        row.postedBy.value,
+                        row.postedOn.value,
+                        row.postedTo.value,
+                        row.title.value,
+                        row.content.value
+                    ));  
+                } 
+            });
+            console.log("finished with society announcements");
+            repository.push(societyResults);
+            res.json(repository);
+        }
+    });
+    connection.execSql(courseAnnounceRequest);
+});
     
 //instructor retrieval
-//TO DO: add prof bios then retrieve data
+//TO DO: add route for instructors filtered by some criteria
 app.get("/api/instructors", function(req, res) {
-        var request = new dbRequest("select * from comp3504data.instructors", function(err, rowCount, rows) {
+        var request = new dbRequest("SELECT * FROM comp3504data.instructors WHERE bio IS NOT NULL ORDER BY full_name DESC", function(err, rowCount, rows) {
             if (err) {
                 console.log(err);
                 res.json(err);
@@ -147,11 +269,13 @@ app.get("/api/instructors", function(req, res) {
                             row.full_name.value,
                             row.created_at.value,
                             row.imagePath.value,
-                            row.bio.value
-                        ));  
+                            row.bio.value,
+                            row.office.value,
+                            row.email.value,
+                            row.education.value
+                        ));
                     }  
                 });
-
                 //console.log(result);
                 result = result.reverse();
                 res.json(result);
@@ -175,6 +299,12 @@ function Announcement(id, by, on, to, title, content) {
     this.content = content;
 }
 
+function AnnouncementGroup(id, groupName) {
+    this.groupID = id;
+    this.groupName = groupName;
+    this.announcements = [];
+}
+
 function Course(id, subject, number, title, attribute, created_at) {
     this.id = id;
     this.subject = subject;
@@ -184,10 +314,21 @@ function Course(id, subject, number, title, attribute, created_at) {
     this.created_at = created_at;
 }
 
-function Instructor (id, fullName, created, imgPath, bio) {
+function Instructor (id, fullName, created, imgPath, bio, office, email, education) {
     this.id = id;
     this.fullName = fullName;
     this.createdAt = created;
     this.imgPath = imgPath;
     this.bio = bio;
+    this.office = office;
+    this.email = email;
+    this.education = education;
+}
+
+function CourseInstance (abbreviation, day, startTime, endTime, location) {
+    this.abbreviation = abbreviation;
+    this.day = day;
+    this.startTime = startTime;
+    this.endTime = endTime;
+    this.location = location;
 }
