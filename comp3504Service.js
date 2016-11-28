@@ -51,11 +51,7 @@ connection.on('connect', function(err) {
 //Begin routes
 
 app.get('/', function (req, res) {
-  //res.send('hello world');
-  res.json({
-      message: "jsoooooooooooooon"
-  });
-  
+  res.send('hello world');
 });
 
 //course dump
@@ -129,7 +125,36 @@ function getCourseInstances (courseID) {
     return courseInstances;
 }
 
+app.get("/api/courses/core", function(req, res) {
+    console.log("in core coures");
+    var request = new dbRequest("SELECT *, RIGHT(courseNumber, 4) as courseNum FROM comp3504data.core_course ORDER BY courseNumber DESC", function (err, rowCount, rows) {
+        if (err) {
+            console.log(err);
+            res.json({message: "error retrieving core courses"});
+        } else {
+            var result = [];
+            rows.forEach(function (row) {
+                if (row.value === null) {
+                    console.log("NULL");
+                } else {
+                    result.push(new CoreCourse(
+                        row.program.value,
+                        row.courseNum.value,
+                        row.prerequisite1.value,
+                        row.prerequisite2.value,
+                        row.prerequisite3.value
+                    ));
+                }
+            });
+            result = result.reverse();
+            res.json(result);
+        }
+    });
+    connection.execSql(request);
+});
+
 //announcement retrieval
+//not used
 //TO DO: sort announcements by most recent date
 app.get("/api/announcements/course", function(req, res) {
         console.log("in course announcements");
@@ -331,4 +356,13 @@ function CourseInstance (abbreviation, day, startTime, endTime, location) {
     this.startTime = startTime;
     this.endTime = endTime;
     this.location = location;
+}
+
+function CoreCourse (program, courseNum, preReq1, preReq2, preReq3) {
+    this.program = program;
+    this.courseNumber = courseNum;
+    this.preReq = [];
+    this.preReq.push(preReq1);
+    this.preReq.push(preReq2);
+    this.preReq.push(preReq3);
 }
