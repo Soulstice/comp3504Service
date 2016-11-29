@@ -329,7 +329,6 @@ app.get("/api/instructors", function(req, res) {
                         result.push(new Instructor(
                             row.id.value,
                             row.full_name.value,
-                            row.created_at.value,
                             row.imagePath.value,
                             row.bio.value,
                             row.office.value,
@@ -376,11 +375,10 @@ function Course(id, subject, number, title, attribute) {
     this.sections = [];
 }
 
-function Instructor (id, fullName, created, imgPath, bio, office, email, education) {
+function Instructor (id, fullName, imgPath, bio, office, email, education) {
     this.id = id;
-    this.fullName = fullName;
-    this.createdAt = created;
-    this.imgPath = imgPath;
+    this.name = fullName;
+    this.imagePath = imgPath;
     this.bio = bio;
     this.office = office;
     this.email = email;
