@@ -1,6 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var http = require("http");
+//var async = require("async");
 
 
 var dbConnection = require("tedious").Connection;
@@ -51,80 +52,116 @@ connection.on('connect', function(err) {
 //Begin routes
 
 app.get('/', function (req, res) {
-  res.send('hello world');
+    console.log('hello world');
+    getCourseInstances(1005, function() {
+        console.log("in function");
+        res.json({message: "hello world"});
+    });
 });
 
 //course dump
 //TO DO: decide what to sort on; probably on subject then #
 app.get('/api/courses', function(req, res) {
-        console.log("in courses");
-        
-        var request = new dbRequest("select * from comp3504data.courses", function(err, rowCount, rows) {
-            if (err) {
-                console.log(err);
-            }
-            else {
-                var result = [];
-                //console.log(rows);
-                rows.forEach(function (row) {
-                    if (row.value === null) {  
-                        console.log('NULL');  
-                    } else {  
-                        result.push(new Course(
-                            row.id.value,
-                            row.subject.value,
-                            row.number.value,
-                            row.title.value,
-                            row.attribute.value,
-                            row.created_at.value
-                        ));  
-                    }  
-                });
-                result = result.reverse();
-                res.json(result);
-                
-                //console.log(request);
-            }
-        });
-        connection.execSql(request);  
-        
+    console.log("in courses");
+    
+    var request = new dbRequest("select * from comp3504data.courses where number <> '' and id is not null and subject = 'COMP'", function(err, rowCount, rows) {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            var result = [];
+            rows.forEach(function (row) {
+                if (row.value === null) {  
+                    console.log('NULL');  
+                } else {  
+                    result.push(new Course(
+                        row.id.value,
+                        row.subject.value,
+                        row.number.value,
+                        row.title.value,
+                        row.attribute.value
+                    ));  
+                }  
+            });
+            result = result.reverse();
+            
+            res.json(result);
+        }
     });
+    connection.execSql(request);  
+    
+});
 
-function getCourseInstances (courseID) {
-    var courseInstances = [];
-    var sql = "select sec.abbrev," +
-            	"d.day," +
-            	"d.start_time," +
-            	"d.end_time," +
-            	"l.room as location" +	
-                "from comp3504data.deliveries d" +
-                "inner join comp3504data.locations l on d.location_id = l.id" +
-                "inner join comp3504data.sections sec on sec.id = d.section_id" +
-                "inner join comp3504data.courses c on c.id = sec.course_id" +
-                "where c.id = " + courseID;
+//
+app.get("/api/courses/:courseID", function(req, res) {
+    console.log("in course instances route");
+    
+    var sql = "select sec.abbrev, d.day, d.start_time, d.end_time, ins.full_name, l.room as location from comp3504data.deliveries d inner join comp3504data.locations l on d.location_id = l.id inner join comp3504data.instructions i on i.delivery_id = d.id inner join comp3504data.instructors ins on ins.id = i.instructor_id inner join comp3504data.sections sec on sec.id = d.section_id inner join comp3504data.courses c on c.id = sec.course_id where term_id = 12 and c.id = " + req.params.courseID;
     var request = new dbRequest(sql, function (err, rowCount, rows) {
         if (err) {
             console.log(err);
         } else {
-            
+            var courseInstances = [];
             rows.forEach(function (row) {
                 if (row.value === null) {
                     console.log('NULL');
                 } else {
-                    courseInstances.push( new CourseInstance(
+                    // console.log("before push");
+                    // console.log(row.abbrev.value);
+                    courseInstances.push(new CourseInstance(
                         row.abbrev.value,
                         row.day.value,
                         row.start_time.value,
                         row.end_time.value,
-                        row.location.value
+                        row.location.value,
+                        row.full_name.value
                     ));
                 }
             });
+            //console.log(courseInstances);
+            res.json(courseInstances);
         }
     });
-    return courseInstances;
-}
+    
+    connection.execSql(request);
+    //console.log(courseInstances);
+});
 
+// //
+// function getCourseInstances (courseID) {
+    
+//     var sql = "select sec.abbrev, d.day, d.start_time, d.end_time, ins.full_name, l.room as location from comp3504data.deliveries d inner join comp3504data.locations l on d.location_id = l.id inner join comp3504data.instructions i on i.delivery_id = d.id inner join comp3504data.instructors ins on ins.id = i.instructor_id inner join comp3504data.sections sec on sec.id = d.section_id inner join comp3504data.courses c on c.id = sec.course_id where term_id = 12 and c.id = " + courseID;
+//     var request = new dbRequest(sql, function (err, rowCount, rows) {
+//         if (err) {
+//             console.log(err);
+//         } else {
+//             var courseInstances = [];
+//             rows.forEach(function (row) {
+//                 if (row.value === null) {
+//                     console.log('NULL');
+//                 } else {
+//                     // console.log("before push");
+//                     // console.log(row.abbrev.value);
+//                     courseInstances.push(new CourseInstance(
+//                         row.abbrev.value,
+//                         row.day.value,
+//                         row.start_time.value,
+//                         row.end_time.value,
+//                         row.location.value,
+//                         row.full_name.value
+//                     ));
+//                 }
+//             });
+//             console.log(courseInstances);
+//             return courseInstances;
+//         }
+//     });
+    
+//     connection.execSql(request);
+//     //console.log(courseInstances);
+// }
+
+//
 app.get("/api/courses/core", function(req, res) {
     console.log("in core coures");
     var request = new dbRequest("SELECT *, RIGHT(courseNumber, 4) as courseNum FROM comp3504data.core_course ORDER BY courseNumber DESC", function (err, rowCount, rows) {
@@ -330,13 +367,13 @@ function AnnouncementGroup(id, groupName) {
     this.announcements = [];
 }
 
-function Course(id, subject, number, title, attribute, created_at) {
+function Course(id, subject, number, title, attribute) {
     this.id = id;
     this.subject = subject;
     this.number = number;
     this.title = title;
     this.attribute = attribute;
-    this.created_at = created_at;
+    this.sections = [];
 }
 
 function Instructor (id, fullName, created, imgPath, bio, office, email, education) {
@@ -350,12 +387,13 @@ function Instructor (id, fullName, created, imgPath, bio, office, email, educati
     this.education = education;
 }
 
-function CourseInstance (abbreviation, day, startTime, endTime, location) {
+function CourseInstance (abbreviation, day, startTime, endTime, location, instructor) {
     this.abbreviation = abbreviation;
     this.day = day;
     this.startTime = startTime;
     this.endTime = endTime;
     this.location = location;
+    this.instructor = instructor;
 }
 
 function CoreCourse (program, courseNum, preReq1, preReq2, preReq3) {

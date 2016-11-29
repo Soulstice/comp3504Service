@@ -9,7 +9,7 @@
   },
   "author": "Ryan Barton <rbart325@mtroyal.ca>",
   "dependencies": {
-    "async": "~0.2.8",
+    "async": "^0.2.10",
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
     "http": "0.0.0",
