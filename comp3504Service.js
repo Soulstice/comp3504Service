@@ -354,7 +354,7 @@ server.listen(process.env.PORT);
 function Announcement(id, by, on, to, title, content) {
     this.announcementID = id;
     this.postedBy = by;
-    this.postedOn = on;
+    this.date = on;
     this.postedTo = to;
     this.title = title;
     this.content = content;
