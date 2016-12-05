@@ -92,6 +92,99 @@ app.get('/api/courses', function(req, res) {
     
 });
 
+//electives
+app.get('/api/courses/electives', function(req, res) {
+    console.log("in electives");
+    var sql = "SELECT DISTINCT c.[id], c.[subject], c.[number], c.[title], c.[attribute] FROM [comp3504data].[courses] c inner join comp3504data.sections s on c.id = s.course_id inner join comp3504data.terms t on s.term_id = t.id and t.id = 12 WHERE c.subject <> '' OR c.number <> NULL ORDER BY c.subject ASC, c.number ASC";
+    
+    var request = new dbRequest(sql, function(err, rowCount, rows) {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            var result = [];
+            rows.forEach(function (row) {
+                if (row.value === null) {  
+                    console.log('NULL');  
+                } else {  
+                    result.push(new Course(
+                        row.id.value,
+                        row.subject.value,
+                        row.number.value,
+                        row.title.value,
+                        row.attribute.value
+                    ));  
+                }  
+            });
+            
+            res.json(result);
+        }
+    });
+    connection.execSql(request);  
+    
+});
+
+//gned courses
+app.get('/api/courses/gned', function(req, res) {
+    console.log("in gneds");
+    var sql = "SELECT DISTINCT c.[id], c.[subject], c.[number], c.[title], CAST(c.[attribute] as nvarchar(128)) as attribute, c.[created_at] FROM [comp3504data].[courses] c inner join comp3504data.sections s on c.id = s.course_id inner join comp3504data.terms t on s.term_id = t.id and t.id = 12 where attribute LIKE '%Cluster%'";
+    var request = new dbRequest(sql, function(err, rowCount, rows) {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            var result = [];
+            rows.forEach(function (row) {
+                if (row.value === null) {  
+                    console.log('NULL');  
+                } else {  
+                    result.push(new Course(
+                        row.id.value,
+                        row.subject.value,
+                        row.number.value,
+                        row.title.value,
+                        row.attribute.value
+                    ));  
+                }  
+            });
+            
+            
+            res.json(result);
+        }
+    });
+    connection.execSql(request);  
+    
+});
+
+//core courses
+app.get('/api/courses/core', function(req, res) {
+    console.log("in core courses");
+    var sql = "SELECT c.[id], c.[subject], c.[number], c.[title], c.[attribute], c.[created_at] FROM [comp3504data].[courses] c inner join comp3504data.coreCourse cc on cc.courseNumber = (c.subject + c.number)";
+    var request = new dbRequest(sql, function(err, rowCount, rows) {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            var result = [];
+            rows.forEach(function (row) {
+                if (row.value === null) {  
+                    console.log('NULL');  
+                } else {  
+                    result.push(new Course(
+                        row.id.value,
+                        row.subject.value,
+                        row.number.value,
+                        row.title.value,
+                        row.attribute.value
+                    ));  
+                }  
+            });
+            res.json(result);
+        }
+    });
+    connection.execSql(request);  
+});
+
 //
 app.get("/api/courses/:courseID", function(req, res) {
     console.log("in course instances route");
@@ -161,13 +254,13 @@ app.get("/api/courses/:courseID", function(req, res) {
 //     //console.log(courseInstances);
 // }
 
-//
-app.get("/api/courses/core", function(req, res) {
+//core course retrieval
+app.get("/api/courses/core1", function(req, res) {
     console.log("in core coures");
-    var request = new dbRequest("SELECT *, RIGHT(courseNumber, 4) as courseNum FROM comp3504data.core_course ORDER BY courseNumber DESC", function (err, rowCount, rows) {
+    var request = new dbRequest("SELECT coreID, program, RIGHT(courseNumber, 4) as courseNum, prerequisite1, prerequisite2, prerequisite3 FROM comp3504data.coreCourse ORDER BY courseNumber DESC", function (err, rowCount, rows) {
         if (err) {
             console.log(err);
-            res.json({message: "error retrieving core courses"});
+            //res.json({message: "error retrieving core courses"});
         } else {
             var result = [];
             rows.forEach(function (row) {
@@ -175,6 +268,7 @@ app.get("/api/courses/core", function(req, res) {
                     console.log("NULL");
                 } else {
                     result.push(new CoreCourse(
+                        row.coreID.value,
                         row.program.value,
                         row.courseNum.value,
                         row.prerequisite1.value,
@@ -394,7 +488,8 @@ function CourseInstance (abbreviation, day, startTime, endTime, location, instru
     this.instructor = instructor;
 }
 
-function CoreCourse (program, courseNum, preReq1, preReq2, preReq3) {
+function CoreCourse (id, program, courseNum, preReq1, preReq2, preReq3) {
+    this.id = id;
     this.program = program;
     this.courseNumber = courseNum;
     this.preReq = [];
