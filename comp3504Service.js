@@ -102,6 +102,7 @@ app.get('/api/courses/electives', function(req, res) {
             console.log(err);
         }
         else {
+            var electiveResults = new CourseGroup(2, "Electives");
             var result = [];
             rows.forEach(function (row) {
                 if (row.value === null) {  
@@ -116,8 +117,8 @@ app.get('/api/courses/electives', function(req, res) {
                     ));  
                 }  
             });
-            
-            res.json(result);
+            electiveResults.courseGrouping = result;
+            res.json(electiveResults);
         }
     });
     connection.execSql(request);  
@@ -133,6 +134,7 @@ app.get('/api/courses/gned', function(req, res) {
             console.log(err);
         }
         else {
+            var gnedResults = new CourseGroup(1, "GNED");
             var result = [];
             rows.forEach(function (row) {
                 if (row.value === null) {  
@@ -148,8 +150,8 @@ app.get('/api/courses/gned', function(req, res) {
                 }  
             });
             
-            
-            res.json(result);
+            gnedResults.courseGrouping = result;
+            res.json(gnedResults);
         }
     });
     connection.execSql(request);  
@@ -165,6 +167,7 @@ app.get('/api/courses/core', function(req, res) {
             console.log(err);
         }
         else {
+            var coreResults = new CourseGroup(0, "Core Courses");
             var result = [];
             rows.forEach(function (row) {
                 if (row.value === null) {  
@@ -179,7 +182,8 @@ app.get('/api/courses/core', function(req, res) {
                     ));  
                 }  
             });
-            res.json(result);
+            coreResults.courseGrouping = result;
+            res.json(coreResults);
         }
     });
     connection.execSql(request);  
@@ -461,12 +465,18 @@ function AnnouncementGroup(id, groupName) {
 }
 
 function Course(id, subject, number, title, attribute) {
-    this.id = id;
+    this.courseID = id;
     this.subject = subject;
-    this.number = number;
+    this.courseNumber = number;
     this.title = title;
     this.attribute = attribute;
     this.sections = [];
+}
+
+function CourseGroup(id, groupName) {
+    this.courseGroupID = id;
+    this.title = groupName;
+    this.courseGrouping = [];
 }
 
 function Instructor (id, fullName, imgPath, bio, office, email, education) {
