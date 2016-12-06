@@ -190,10 +190,10 @@ app.get('/api/courses/core', function(req, res) {
 });
 
 //
-app.get("/api/courses/:courseID", function(req, res) {
+app.get("/api/courses/sections/:courseID", function(req, res) {
     console.log("in course instances route");
     
-    var sql = "select sec.abbrev, d.day, d.start_time, d.end_time, ins.full_name, l.room as location from comp3504data.deliveries d inner join comp3504data.locations l on d.location_id = l.id inner join comp3504data.instructions i on i.delivery_id = d.id inner join comp3504data.instructors ins on ins.id = i.instructor_id inner join comp3504data.sections sec on sec.id = d.section_id inner join comp3504data.courses c on c.id = sec.course_id where term_id = 12 and c.id = " + req.params.courseID;
+    var sql = "select sec.id, sec.abbrev, d.day, d.start_time, d.end_time, ins.full_name, l.room as location from comp3504data.deliveries d inner join comp3504data.locations l on d.location_id = l.id inner join comp3504data.instructions i on i.delivery_id = d.id inner join comp3504data.instructors ins on ins.id = i.instructor_id inner join comp3504data.sections sec on sec.id = d.section_id inner join comp3504data.courses c on c.id = sec.course_id where term_id = 12 and c.id = " + req.params.courseID;
     var request = new dbRequest(sql, function (err, rowCount, rows) {
         if (err) {
             console.log(err);
@@ -206,6 +206,7 @@ app.get("/api/courses/:courseID", function(req, res) {
                     // console.log("before push");
                     // console.log(row.abbrev.value);
                     courseInstances.push(new CourseInstance(
+                        row.id.value,
                         row.abbrev.value,
                         row.day.value,
                         row.start_time.value,
@@ -259,6 +260,7 @@ app.get("/api/courses/:courseID", function(req, res) {
 // }
 
 //core course retrieval
+//not currently used
 app.get("/api/courses/core1", function(req, res) {
     console.log("in core coures");
     var request = new dbRequest("SELECT coreID, program, RIGHT(courseNumber, 4) as courseNum, prerequisite1, prerequisite2, prerequisite3 FROM comp3504data.coreCourse ORDER BY courseNumber DESC", function (err, rowCount, rows) {
@@ -489,11 +491,12 @@ function Instructor (id, fullName, imgPath, bio, office, email, education) {
     this.education = education;
 }
 
-function CourseInstance (abbreviation, day, startTime, endTime, location, instructor) {
-    this.abbreviation = abbreviation;
+function CourseInstance (id, abbreviation, day, startTime, endTime, location, instructor) {
+    this.sectionId = id;
+    this.type = abbreviation;
     this.day = day;
-    this.startTime = startTime;
-    this.endTime = endTime;
+    this.start = startTime;
+    this.end = endTime;
     this.location = location;
     this.instructor = instructor;
 }
