@@ -193,7 +193,7 @@ app.get('/api/courses/core', function(req, res) {
 app.get("/api/courses/sections/:courseID", function(req, res) {
     console.log("in course instances route");
     
-    var sql = "select sec.id, sec.abbrev, d.day, d.start_time, d.end_time, ins.full_name, l.room as location from comp3504data.deliveries d inner join comp3504data.locations l on d.location_id = l.id inner join comp3504data.instructions i on i.delivery_id = d.id inner join comp3504data.instructors ins on ins.id = i.instructor_id inner join comp3504data.sections sec on sec.id = d.section_id inner join comp3504data.courses c on c.id = sec.course_id where term_id = 12 and c.id = " + req.params.courseID;
+    var sql = "select top 1 sec.id, sec.abbrev, d.day, d.start_time, d.end_time, ins.full_name, l.room as location from comp3504data.deliveries d inner join comp3504data.locations l on d.location_id = l.id inner join comp3504data.instructions i on i.delivery_id = d.id inner join comp3504data.instructors ins on ins.id = i.instructor_id inner join comp3504data.sections sec on sec.id = d.section_id inner join comp3504data.courses c on c.id = sec.course_id where term_id = 12 and c.id = " + req.params.courseID;
     var request = new dbRequest(sql, function (err, rowCount, rows) {
         if (err) {
             console.log(err);
