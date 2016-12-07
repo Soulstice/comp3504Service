@@ -95,7 +95,7 @@ app.get('/api/courses', function(req, res) {
 //electives
 app.get('/api/courses/electives', function(req, res) {
     console.log("in electives");
-    var sql = "SELECT DISTINCT c.[id], c.[subject], c.[number], c.[title], c.[attribute] FROM [comp3504data].[courses] c inner join comp3504data.sections s on c.id = s.course_id inner join comp3504data.terms t on s.term_id = t.id and t.id = 12 WHERE c.subject <> '' OR c.number <> NULL ORDER BY c.subject ASC, c.number ASC";
+    var sql = "SELECT DISTINCT TOP 50 c.[id], c.[subject], c.[number], c.[title], c.[attribute] FROM [comp3504data].[courses] c inner join comp3504data.sections s on c.id = s.course_id inner join comp3504data.terms t on s.term_id = t.id and t.id = 12 WHERE c.subject <> '' OR c.number <> NULL ORDER BY c.subject ASC, c.number ASC";
     
     var request = new dbRequest(sql, function(err, rowCount, rows) {
         if (err) {
@@ -128,7 +128,7 @@ app.get('/api/courses/electives', function(req, res) {
 //gned courses
 app.get('/api/courses/gned', function(req, res) {
     console.log("in gneds");
-    var sql = "SELECT DISTINCT c.[id], c.[subject], c.[number], c.[title], CAST(c.[attribute] as nvarchar(128)) as attribute, c.[created_at] FROM [comp3504data].[courses] c inner join comp3504data.sections s on c.id = s.course_id inner join comp3504data.terms t on s.term_id = t.id and t.id = 12 where attribute LIKE '%Cluster%'";
+    var sql = "SELECT DISTINCT TOP 50 c.[id], c.[subject], c.[number], c.[title], CAST(c.[attribute] as nvarchar(128)) as attribute, c.[created_at] FROM [comp3504data].[courses] c inner join comp3504data.sections s on c.id = s.course_id inner join comp3504data.terms t on s.term_id = t.id and t.id = 12 where attribute LIKE '%Cluster%'";
     var request = new dbRequest(sql, function(err, rowCount, rows) {
         if (err) {
             console.log(err);
